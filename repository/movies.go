@@ -20,16 +20,24 @@ func (m *MoviesRepo) GetAll() ([]structs.Movies, error) {
 	var movies []structs.Movies
 
 	rows, err := m.DB.Query("SELECT * FROM movies")
+
 	if err != nil {
-		return nil, err
+		return movies, err
+
 	}
+
+	defer rows.Close()
 
 	for rows.Next() {
 		var movie structs.Movies
-		err = rows.Scan(&movie.ID, &movie.Name, &movie.Slug, &movie.Category, &movie.Video_url, &movie.Thumbnail_url, &movie.Rating, &movie.Is_featured, &movie.Created_at, &movie.Updated_at, &movie.Deleted_at)
+
+		err := rows.Scan(&movie.ID, &movie.Name, &movie.Slug, &movie.Category, &movie.Video_url, &movie.Thumbnail_url, &movie.Rating, &movie.Is_featured, &movie.Created_at, &movie.Updated_at)
+
 		if err != nil {
-			return nil, err
+			return movies, err
+
 		}
+
 		movies = append(movies, movie)
 	}
 
@@ -40,17 +48,19 @@ func (m *MoviesRepo) GetAll() ([]structs.Movies, error) {
 func (m *MoviesRepo) GetByID(id int) (structs.Movies, error) {
 	var movie structs.Movies
 
-	err := m.DB.QueryRow("SELECT * FROM movies WHERE id = $1", id).Scan(&movie.ID, &movie.Name, &movie.Slug, &movie.Category, &movie.Video_url, &movie.Thumbnail_url, &movie.Rating, &movie.Is_featured, &movie.Created_at, &movie.Updated_at, &movie.Deleted_at)
+	err := m.DB.QueryRow("SELECT * FROM movies WHERE id = $1", id).Scan(&movie.ID, &movie.Name, &movie.Slug, &movie.Category, &movie.Video_url, &movie.Thumbnail_url, &movie.Rating, &movie.Is_featured, &movie.Created_at, &movie.Updated_at)
+
 	if err != nil {
 		return movie, err
+
 	}
 
 	return movie, nil
 }
 
 // Insert is the function to insert Movies
-func (m *MoviesRepo) Insert(movie structs.Movies) (structs.Movies, error) {
-	err := m.DB.QueryRow("INSERT INTO movies (name, slug, category, video_url, thumbnail_url, rating, is_featured) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id", movie.Name, movie.Slug, movie.Category, movie.Video_url, movie.Thumbnail_url, movie.Rating, movie.Is_featured).Scan(&movie.ID)
+func (m *MoviesRepo) Insert(movie structs.Movies, DbConnection *sql.DB) (structs.Movies, error) {
+	err := DbConnection.QueryRow("INSERT INTO movies(name, slug, category, video_url, thumbnail, rating, is_featured, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id", movie.Name, movie.Slug, movie.Category, movie.Video_url, movie.Thumbnail_url, movie.Rating, movie.Is_featured, movie.Created_at, movie.Updated_at).Scan(&movie.ID)
 
 	if err != nil {
 		return movie, err
@@ -60,8 +70,8 @@ func (m *MoviesRepo) Insert(movie structs.Movies) (structs.Movies, error) {
 }
 
 // Update is the function to update Movies
-func (m *MoviesRepo) Update(movie structs.Movies) (structs.Movies, error) {
-	_, err := m.DB.Exec("UPDATE movies SET name = $1, slug = $2, category = $3, video_url = $4, thumbnail_url = $5, rating = $6, is_featured = $7 WHERE id = $8", movie.Name, movie.Slug, movie.Category, movie.Video_url, movie.Thumbnail_url, movie.Rating, movie.Is_featured, movie.ID)
+func (m *MoviesRepo) Update(id int, movie structs.Movies) (structs.Movies, error) {
+	_, err := m.DB.Exec("UPDATE movies SET name = $1, slug = $2, category = $3, video_url = $4, thumbnail = $5, rating = $6, is_featured = $7, updated_at = $8 WHERE id = $9", movie.Name, movie.Slug, movie.Category, movie.Video_url, movie.Thumbnail_url, movie.Rating, movie.Is_featured, movie.Updated_at, id)
 
 	if err != nil {
 		return movie, err

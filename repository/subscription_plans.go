@@ -26,7 +26,8 @@ func (s *SubscriptionPlanRepo) GetAll() ([]structs.SubscriptionPlan, error) {
 
 	for rows.Next() {
 		var subscriptionPlan structs.SubscriptionPlan
-		err = rows.Scan(&subscriptionPlan.ID, &subscriptionPlan.Name, &subscriptionPlan.Price, &subscriptionPlan.Created_at, &subscriptionPlan.Updated_at)
+
+		err = rows.Scan(&subscriptionPlan.ID, &subscriptionPlan.Name, &subscriptionPlan.Price, &subscriptionPlan.Active_period_in_months, &subscriptionPlan.Featured, &subscriptionPlan.Created_at, &subscriptionPlan.Updated_at)
 		if err != nil {
 			return nil, err
 		}
@@ -40,7 +41,7 @@ func (s *SubscriptionPlanRepo) GetAll() ([]structs.SubscriptionPlan, error) {
 func (s *SubscriptionPlanRepo) GetByID(id int) (structs.SubscriptionPlan, error) {
 	var subscriptionPlan structs.SubscriptionPlan
 
-	err := s.DB.QueryRow("SELECT * FROM subscription_plans WHERE id = $1", id).Scan(&subscriptionPlan.ID, &subscriptionPlan.Name, &subscriptionPlan.Price)
+	err := s.DB.QueryRow("SELECT * FROM subscription_plans WHERE id = $1", id).Scan(&subscriptionPlan.ID, &subscriptionPlan.Name, &subscriptionPlan.Price, &subscriptionPlan.Active_period_in_months, &subscriptionPlan.Featured, &subscriptionPlan.Created_at, &subscriptionPlan.Updated_at)
 	if err != nil {
 		return subscriptionPlan, err
 	}
@@ -50,8 +51,7 @@ func (s *SubscriptionPlanRepo) GetByID(id int) (structs.SubscriptionPlan, error)
 
 // Insert is the function to insert subscription plan
 func (s *SubscriptionPlanRepo) Insert(subscriptionPlan structs.SubscriptionPlan) (structs.SubscriptionPlan, error) {
-	err := s.DB.QueryRow("INSERT INTO subscription_plans (name, price) VALUES ($1, $2) RETURNING id", subscriptionPlan.Name, subscriptionPlan.Price).Scan(&subscriptionPlan.ID)
-
+	err := s.DB.QueryRow("INSERT INTO subscription_plans (name, price, active_period_in_months, features, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id", subscriptionPlan.Name, subscriptionPlan.Price, subscriptionPlan.Active_period_in_months, subscriptionPlan.Featured, subscriptionPlan.Created_at, subscriptionPlan.Updated_at).Scan(&subscriptionPlan.ID)
 	if err != nil {
 		return subscriptionPlan, err
 	}
@@ -59,9 +59,9 @@ func (s *SubscriptionPlanRepo) Insert(subscriptionPlan structs.SubscriptionPlan)
 	return subscriptionPlan, nil
 }
 
-// Update is the function to update subscription plan
-func (s *SubscriptionPlanRepo) Update(subscriptionPlan structs.SubscriptionPlan) (structs.SubscriptionPlan, error) {
-	_, err := s.DB.Exec("UPDATE subscription_plans SET name = $1, price = $2 WHERE id = $3", subscriptionPlan.Name, subscriptionPlan.Price, subscriptionPlan.ID)
+// Update is the function to update subscription plan with id
+func (s *SubscriptionPlanRepo) Update(id int, subscriptionPlan structs.SubscriptionPlan) (structs.SubscriptionPlan, error) {
+	_, err := s.DB.Exec("UPDATE subscription_plans SET name = $1, price = $2, active_period_in_months = $3, features = $4, updated_at = $5 WHERE id = $6", subscriptionPlan.Name, subscriptionPlan.Price, subscriptionPlan.Active_period_in_months, subscriptionPlan.Featured, subscriptionPlan.Updated_at, id)
 
 	if err != nil {
 		return subscriptionPlan, err

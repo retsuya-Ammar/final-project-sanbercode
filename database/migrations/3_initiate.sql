@@ -3,7 +3,7 @@
 
 CREATE TABLE IF NOT EXISTS public.user_subscriptions
 (
-    id bigint NOT NULL,
+    id SERIAL PRIMARY KEY,
     user_id bigint NOT NULL,
     subscription_plan_id bigint NOT NULL,
     price integer NOT NULL,
@@ -12,8 +12,6 @@ CREATE TABLE IF NOT EXISTS public.user_subscriptions
     "snapToken" character varying(255) COLLATE pg_catalog."default",
     created_at timestamp without time zone,
     updated_at timestamp without time zone,
-    deleted_at timestamp without time zone,
-    CONSTRAINT "PK_user_subscriptions" PRIMARY KEY (id),
     CONSTRAINT user_subscriptions_subscription_plan_id_foreign FOREIGN KEY (subscription_plan_id)
         REFERENCES public.subscription_plans (id) MATCH SIMPLE
         ON UPDATE RESTRICT

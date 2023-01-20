@@ -24,9 +24,11 @@ func (s *UserSubscriptionRepo) GetAll() ([]structs.UserSubscription, error) {
 		return nil, err
 	}
 
+	var snapToken sql.NullString
+
 	for rows.Next() {
 		var userSubscription structs.UserSubscription
-		err = rows.Scan(&userSubscription.ID, &userSubscription.UserID, &userSubscription.SubscriptionPlanID, &userSubscription.ExpiryDate, &userSubscription.PaymentStatus, &userSubscription.Created_at, &userSubscription.Updated_at)
+		err = rows.Scan(&userSubscription.ID, &userSubscription.UserID, &userSubscription.SubscriptionPlanID, &userSubscription.Price, &userSubscription.ExpiryDate, &userSubscription.PaymentStatus, &snapToken, &userSubscription.Created_at, &userSubscription.Updated_at)
 		if err != nil {
 			return nil, err
 		}
@@ -40,7 +42,9 @@ func (s *UserSubscriptionRepo) GetAll() ([]structs.UserSubscription, error) {
 func (s *UserSubscriptionRepo) GetByID(id int) (structs.UserSubscription, error) {
 	var userSubscription structs.UserSubscription
 
-	err := s.DB.QueryRow("SELECT * FROM user_subscriptions WHERE id = $1", id).Scan(&userSubscription.ID, &userSubscription.UserID, &userSubscription.SubscriptionPlanID, &userSubscription.ExpiryDate, &userSubscription.PaymentStatus, &userSubscription.Created_at, &userSubscription.Updated_at)
+	var snapToken sql.NullString
+
+	err := s.DB.QueryRow("SELECT * FROM user_subscriptions WHERE id = $1", id).Scan(&userSubscription.ID, &userSubscription.UserID, &userSubscription.SubscriptionPlanID, &userSubscription.Price, &userSubscription.ExpiryDate, &userSubscription.PaymentStatus, &snapToken, &userSubscription.Created_at, &userSubscription.Updated_at)
 	if err != nil {
 		return userSubscription, err
 	}
@@ -50,8 +54,7 @@ func (s *UserSubscriptionRepo) GetByID(id int) (structs.UserSubscription, error)
 
 // Insert is the function to insert user subscription
 func (s *UserSubscriptionRepo) Insert(userSubscription structs.UserSubscription) (structs.UserSubscription, error) {
-	err := s.DB.QueryRow("INSERT INTO user_subscriptions (user_id, subscription_plan_id, expiry_date, payment_status) VALUES ($1, $2, $3, $4) RETURNING id", userSubscription.UserID, userSubscription.SubscriptionPlanID, userSubscription.ExpiryDate, userSubscription.PaymentStatus).Scan(&userSubscription.ID)
-
+	err := s.DB.QueryRow("INSERT INTO user_subscriptions (user_id, subscription_plan_id, price, expired_date, payment_status, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id", userSubscription.UserID, userSubscription.SubscriptionPlanID, userSubscription.Price, userSubscription.ExpiryDate, userSubscription.PaymentStatus, userSubscription.Created_at, userSubscription.Updated_at).Scan(&userSubscription.ID)
 	if err != nil {
 		return userSubscription, err
 	}
@@ -59,9 +62,9 @@ func (s *UserSubscriptionRepo) Insert(userSubscription structs.UserSubscription)
 	return userSubscription, nil
 }
 
-// Update is the function to update user subscription
-func (s *UserSubscriptionRepo) Update(userSubscription structs.UserSubscription) (structs.UserSubscription, error) {
-	_, err := s.DB.Exec("UPDATE user_subscriptions SET user_id = $1, subscription_plan_id = $2, expiry_date = $3, payment_status = $4 WHERE id = $5", userSubscription.UserID, userSubscription.SubscriptionPlanID, userSubscription.ExpiryDate, userSubscription.PaymentStatus, userSubscription.ID)
+// Update is the function to update user subscription parameter id
+func (s *UserSubscriptionRepo) Update(id int, userSubscription structs.UserSubscription) (structs.UserSubscription, error) {
+	_, err := s.DB.Exec("UPDATE user_subscriptions SET user_id = $1, subscription_plan_id = $2, price = $3, expired_date = $4, payment_status = $5, updated_at = $6 WHERE id = $7", userSubscription.UserID, userSubscription.SubscriptionPlanID, userSubscription.Price, userSubscription.ExpiryDate, userSubscription.PaymentStatus, userSubscription.Updated_at, id)
 
 	if err != nil {
 		return userSubscription, err

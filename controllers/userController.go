@@ -5,6 +5,7 @@ import (
 	"final-project-sanbercode/database"
 	"final-project-sanbercode/repository"
 	"final-project-sanbercode/structs"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -26,6 +27,7 @@ func NewUserController(db *sql.DB) *UserController {
 func (u *UserController) GetAll(c *gin.Context) {
 	users, err := u.UserRepo.GetAll()
 	if err != nil {
+		log.Println(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Internal Server Error"})
 		return
 	}
@@ -43,6 +45,7 @@ func (u *UserController) GetByID(c *gin.Context) {
 
 	user, err := u.UserRepo.GetByID(id)
 	if err != nil {
+		log.Println(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Internal Server Error"})
 		return
 	}
@@ -60,14 +63,20 @@ func (u *UserController) Login(c *gin.Context) {
 		return
 	}
 
-	user, err = u.UserRepo.Login(user.Email, user.Password)
+	if user.Email == "" || user.Password == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Bad Request"})
+		return
+	} else {
+		user, err = u.UserRepo.Login(user.Email, user.Password)
+	}
 
 	if err != nil {
+		log.Println(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Internal Server Error"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"data": user})
+	c.JSON(http.StatusOK, gin.H{"message": "Login Success", "data": user})
 }
 
 // Insert is the function to insert user
@@ -85,11 +94,12 @@ func (u *UserController) Insert(c *gin.Context) {
 
 	user, err = u.UserRepo.Insert(user)
 	if err != nil {
+		log.Println(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Internal Server Error"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"data": user})
+	c.JSON(http.StatusOK, gin.H{"message": "Register success"})
 }
 
 // Update is the function to update user
@@ -112,6 +122,7 @@ func (u *UserController) Update(c *gin.Context) {
 
 	user, err = u.UserRepo.Update(id, user)
 	if err != nil {
+		log.Println(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Internal Server Error"})
 		return
 	}
@@ -129,6 +140,7 @@ func (u *UserController) Delete(c *gin.Context) {
 
 	err = u.UserRepo.Delete(id)
 	if err != nil {
+		log.Println(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Internal Server Error"})
 		return
 	}

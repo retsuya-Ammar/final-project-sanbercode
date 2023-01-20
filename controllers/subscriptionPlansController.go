@@ -5,6 +5,7 @@ import (
 	"final-project-sanbercode/database"
 	"final-project-sanbercode/repository"
 	"final-project-sanbercode/structs"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -26,6 +27,7 @@ func NewSubscriptionPlansController(db *sql.DB) *SubscriptionPlansController {
 func (s *SubscriptionPlansController) GetAll(c *gin.Context) {
 	subscriptionPlans, err := s.SubscriptionPlansRepo.GetAll()
 	if err != nil {
+		log.Println(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Internal Server Error"})
 		return
 	}
@@ -43,6 +45,7 @@ func (s *SubscriptionPlansController) GetByID(c *gin.Context) {
 
 	subscriptionPlans, err := s.SubscriptionPlansRepo.GetByID(id)
 	if err != nil {
+		log.Println(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Internal Server Error"})
 		return
 	}
@@ -65,6 +68,7 @@ func (s *SubscriptionPlansController) Insert(c *gin.Context) {
 
 	_, err = s.SubscriptionPlansRepo.Insert(subscriptionPlans)
 	if err != nil {
+		log.Println(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Internal Server Error"})
 		return
 	}
@@ -82,10 +86,17 @@ func (s *SubscriptionPlansController) Update(c *gin.Context) {
 		return
 	}
 
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Bad Request"})
+		return
+	}
+
 	subscriptionPlans.Updated_at = time.Now()
 
-	_, err = s.SubscriptionPlansRepo.Update(subscriptionPlans)
+	_, err = s.SubscriptionPlansRepo.Update(id, subscriptionPlans)
 	if err != nil {
+		log.Println(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Internal Server Error"})
 		return
 	}
@@ -103,6 +114,7 @@ func (s *SubscriptionPlansController) Delete(c *gin.Context) {
 
 	err = s.SubscriptionPlansRepo.Delete(id)
 	if err != nil {
+		log.Println(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Internal Server Error"})
 		return
 	}

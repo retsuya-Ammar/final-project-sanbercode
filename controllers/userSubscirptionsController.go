@@ -5,6 +5,7 @@ import (
 	"final-project-sanbercode/database"
 	"final-project-sanbercode/repository"
 	"final-project-sanbercode/structs"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -26,6 +27,7 @@ func NewUserSubscriptionsController(db *sql.DB) *UserSubscriptionsController {
 func (u *UserSubscriptionsController) GetAll(c *gin.Context) {
 	userSubscriptions, err := u.UserSubscriptionsRepo.GetAll()
 	if err != nil {
+		log.Println(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Internal Server Error"})
 		return
 	}
@@ -43,6 +45,7 @@ func (u *UserSubscriptionsController) GetByID(c *gin.Context) {
 
 	userSubscriptions, err := u.UserSubscriptionsRepo.GetByID(id)
 	if err != nil {
+		log.Println(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Internal Server Error"})
 		return
 	}
@@ -56,15 +59,20 @@ func (u *UserSubscriptionsController) Insert(c *gin.Context) {
 
 	err := c.BindJSON(&userSubscriptions)
 	if err != nil {
+		log.Println(err)
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Bad Request"})
 		return
 	}
+
+	// create expriry_date time now + 3 months
+	userSubscriptions.ExpiryDate = time.Now().AddDate(0, 3, 0)
 
 	userSubscriptions.Created_at = time.Now()
 	userSubscriptions.Updated_at = time.Now()
 
 	_, err = u.UserSubscriptionsRepo.Insert(userSubscriptions)
 	if err != nil {
+		log.Println(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Internal Server Error"})
 		return
 	}
@@ -82,10 +90,17 @@ func (u *UserSubscriptionsController) Update(c *gin.Context) {
 		return
 	}
 
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Bad Request"})
+		return
+	}
+
 	userSubscriptions.Updated_at = time.Now()
 
-	_, err = u.UserSubscriptionsRepo.Update(userSubscriptions)
+	_, err = u.UserSubscriptionsRepo.Update(id, userSubscriptions)
 	if err != nil {
+		log.Println(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Internal Server Error"})
 		return
 	}
@@ -103,6 +118,7 @@ func (u *UserSubscriptionsController) Delete(c *gin.Context) {
 
 	err = u.UserSubscriptionsRepo.Delete(id)
 	if err != nil {
+		log.Println(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Internal Server Error"})
 		return
 	}
