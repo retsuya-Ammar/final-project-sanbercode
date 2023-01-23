@@ -26,7 +26,9 @@ func (u *UserRepo) GetAll() ([]structs.Users, error) {
 
 	for rows.Next() {
 		var user structs.Users
-		err = rows.Scan(&user.ID, &user.Name, &user.Email, &user.Password, &user.Remember_token, &user.Created_at, &user.Updated_at)
+
+		var rememberToken sql.NullString
+		err = rows.Scan(&user.ID, &user.Name, &user.Email, &user.Password, &rememberToken, &user.Created_at, &user.Updated_at)
 		if err != nil {
 			return nil, err
 		}
@@ -39,8 +41,9 @@ func (u *UserRepo) GetAll() ([]structs.Users, error) {
 // GetByID is the function to get user by id
 func (u *UserRepo) GetByID(id int) (structs.Users, error) {
 	var user structs.Users
+	var rememberToken sql.NullString
 
-	err := u.DB.QueryRow("SELECT * FROM users WHERE id = $1", id).Scan(&user.ID, &user.Name, &user.Email, &user.Password, &user.Remember_token, &user.Created_at, &user.Updated_at)
+	err := u.DB.QueryRow("SELECT * FROM users WHERE id = $1", id).Scan(&user.ID, &user.Name, &user.Email, &user.Password, &rememberToken, &user.Created_at, &user.Updated_at)
 	if err != nil {
 		return user, err
 	}
