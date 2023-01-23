@@ -22,8 +22,12 @@ func SetupRouter() *gin.Engine {
 
 	// Users
 	usersController := controllers.NewUserController(&sql.DB{})
+	r.GET("/users", usersController.GetAll)
+	r.GET("/users/:id", usersController.GetByID)
 	r.POST("/register", usersController.Insert)
 	r.POST("/login", usersController.Login)
+	r.PUT("/users/:id", middleware.BasicAuth(), usersController.Update)
+	r.DELETE("/users/:id", middleware.BasicAuth(), usersController.Delete)
 
 	// subscription
 	subscriptionController := controllers.NewSubscriptionPlansController(&sql.DB{})
