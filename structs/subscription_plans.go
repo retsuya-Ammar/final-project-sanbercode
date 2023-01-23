@@ -7,7 +7,7 @@ type SubscriptionPlan struct {
 	Name                    string    `json:"name"`
 	Price                   int       `json:"price"`
 	Active_period_in_months int       `json:"active_period_in_months"`
-	Featured                string    `json:"featured"`
+	Featured                string    `json:"features"`
 	Created_at              time.Time `json:"created_at"`
 	Updated_at              time.Time `json:"updated_at"`
 }
